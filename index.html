@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kodavalam - Village Exploration Simulator</title>
+    <meta name="description" content="An immersive 3D village exploration simulation of the heritage riverside settlement of Kodavalam. Discover folklore, meet villagers, craft clay pottery, brew chai, ring the temple bell, and explore lush groves.">
+    <meta property="og:title" content="Kodavalam - Village Exploration Simulator">
+    <meta property="og:description" content="An immersive 3D village exploration simulation of the heritage riverside settlement of Kodavalam. Discover folklore, meet villagers, craft clay pottery, brew chai, ring the temple bell, and explore lush groves.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+          overflow: hidden; 
+          background-color: #061912;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          user-select: none;
+        }
+        .font-serif-title {
+          font-family: 'Cinzel', serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-stone-100 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
