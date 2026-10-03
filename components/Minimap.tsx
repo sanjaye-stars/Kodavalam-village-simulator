@@ -21,7 +21,9 @@ export const Minimap: React.FC<MinimapProps> = ({
   cameraTarget = [0, 0, 0],
   onNavigate,
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth > 768 : true
+  );
 
   // Map world coordinate [-WORLD_SIZE/2, WORLD_SIZE/2] to percentage [0, 100]
   const halfWorld = WORLD_SIZE / 2;
@@ -51,11 +53,11 @@ export const Minimap: React.FC<MinimapProps> = ({
   };
 
   return (
-    <div className="absolute bottom-4 right-4 z-30 pointer-events-auto select-none flex flex-col items-end">
+    <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-30 pointer-events-auto select-none flex flex-col items-end touch-manipulation">
       {/* Expand/Collapse Toggle Pill */}
       <button
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="mb-1.5 px-2.5 py-1 bg-stone-900/90 hover:bg-stone-800 text-amber-200 border border-amber-600/50 rounded-xl shadow-lg backdrop-blur-md text-[11px] font-mono flex items-center gap-1.5 active:scale-95 transition-all"
+        className="mb-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-stone-900/95 hover:bg-stone-800 text-amber-200 border border-amber-600/50 rounded-xl shadow-lg backdrop-blur-md text-[10px] sm:text-[11px] font-mono flex items-center gap-1.5 active:scale-95 transition-all touch-manipulation"
         title="Toggle Realm Minimap"
       >
         <span>🗺️</span>

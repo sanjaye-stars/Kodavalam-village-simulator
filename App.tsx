@@ -606,12 +606,46 @@ export function App() {
 
   const selectedTileData = selectedTile ? tiles[selectedTile.y][selectedTile.x] : null;
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+      const docEl = document.documentElement as any;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      }
+    } else {
+      const doc = document as any;
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      }
+    }
+  };
+
   return (
-    <div className="relative w-screen h-screen flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100 select-none">
-      {/* 1. ROLE SELECTION OPENING MODAL (Shown when opening the game) */}
-      {!userRole && !isCharacterSelectOpen && (
+    <div className="fixed inset-0 w-full h-full h-[100dvh] flex flex-col overflow-hidden bg-stone-950 font-sans text-stone-100 select-none touch-manipulation">
+      {/* 1. ROLE SELECTION OPENING MODAL (Shown when opening the game or returning via Roles button) */}
+      {(!userRole || isRoleModalOpen) && !isCharacterSelectOpen && (
         <RoleSelectionModal
           onSelectRole={(role) => {
+            setIsRoleModalOpen(false);
             if (role === 'president') {
               setUserRole('president');
               setViewMode('sky');
@@ -623,6 +657,7 @@ export function App() {
               setIsCharacterSelectOpen(true);
             }
           }}
+          onBackToGame={userRole ? () => setIsRoleModalOpen(false) : undefined}
         />
       )}
 
@@ -633,6 +668,7 @@ export function App() {
             setSelectedPauranChar(char);
             setUserRole('pauran');
             setIsCharacterSelectOpen(false);
+            setIsRoleModalOpen(false);
             setViewMode('pov');
             setCameraTarget(undefined);
             setSelectedTile(null);
@@ -660,44 +696,60 @@ export function App() {
               );
             }
           }}
+          onBack={() => {
+            setIsCharacterSelectOpen(false);
+            if (!userRole) {
+              setIsRoleModalOpen(true);
+            }
+          }}
         />
       )}
 
-      {/* 2. CONSOLIDATED FLOATING BUTTONS (PANCHAYAT MENU + DEDICATED CAMERA VIEW TOGGLE) */}
+      {/* 2. CONSOLIDATED FLOATING BUTTONS (BACK TO ROLES + PANCHAYAT MENU + DEDICATED CAMERA VIEW TOGGLE + FULLSCREEN) */}
       {userRole && (
-        <div className="absolute top-4 left-4 z-30 pointer-events-auto flex items-center gap-2.5">
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-30 pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 flex-wrap max-w-[calc(100vw-16px)]">
+          {/* Back to Role Selection / Main Screen Button */}
+          <button
+            onClick={() => setIsRoleModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2.5 bg-stone-900/95 hover:bg-stone-800 text-amber-300 border-2 border-amber-600/70 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all group touch-manipulation cursor-pointer"
+            title="Return to Role Selection (Switch between President and Citizen)"
+          >
+            <span className="text-sm font-bold group-hover:-translate-x-0.5 transition-transform">←</span>
+            <span className="font-mono text-xs">Roles</span>
+          </button>
+
           {/* Main Consolidated Menu Button */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="flex items-center gap-2.5 px-4 py-2.5 bg-stone-900/90 hover:bg-stone-800 text-amber-200 border-2 border-amber-600/70 rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all group"
+            className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-stone-900/95 hover:bg-stone-800 text-amber-200 border-2 border-amber-600/70 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all group touch-manipulation"
             title="Open Panchayat Office, Ledger, Construction & Settings"
           >
-            <span className="text-lg group-hover:scale-110 transition-transform">🏛️</span>
-            <span className="font-serif-title text-sm">ഗ്രാമപഞ്ചായത്ത് (Menu)</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-normal bg-stone-800 text-amber-300 border border-stone-700">
-              {userRole === 'president' ? '👑 President' : '🚶 Pauran'}
+            <span className="text-base sm:text-lg group-hover:scale-110 transition-transform">🏛️</span>
+            <span className="font-serif-title text-xs sm:text-sm">ഗ്രാമപഞ്ചായത്ത്</span>
+            <span className="hidden xs:inline px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-normal bg-stone-800 text-amber-300 border border-stone-700">
+              {userRole === 'president' ? '👑 Pres' : '🚶 Citizen'}
             </span>
           </button>
 
-          {/* Separate Option for Sky View / POV View (Pauran can switch to Sky View easily) */}
+          {/* Separate Option for Sky View / POV View */}
           <button
             onClick={handleToggleViewMode}
-            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all border-2 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3.5 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all border-2 touch-manipulation ${
               viewMode === 'sky'
-                ? 'bg-sky-950/90 hover:bg-sky-900 text-sky-200 border-sky-500/70'
-                : 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border-emerald-500/70'
+                ? 'bg-sky-950/95 hover:bg-sky-900 text-sky-200 border-sky-500/70'
+                : 'bg-emerald-950/95 hover:bg-emerald-900 text-emerald-200 border-emerald-500/70'
             }`}
             title={
               viewMode === 'sky'
-                ? 'Currently in Sky View. Click to switch to Street POV View'
-                : 'Currently in POV View. Click to switch to Sky View'
+                ? 'Currently in Sky View. Tap to switch to Street POV View'
+                : 'Currently in POV View. Tap to switch to Sky View'
             }
           >
-            <span className="text-base">{viewMode === 'sky' ? '🦅' : '🚶'}</span>
+            <span className="text-sm sm:text-base">{viewMode === 'sky' ? '🦅' : '🚶'}</span>
             <span className="font-mono text-xs">
-              {viewMode === 'sky' ? 'Sky View' : 'POV View'}
+              {viewMode === 'sky' ? 'Sky' : 'POV'}
             </span>
-            <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[10px] bg-black/40 border border-white/10 uppercase">
+            <span className="hidden sm:inline px-1 py-0.5 rounded text-[9px] bg-black/40 border border-white/10 uppercase">
               {viewMode === 'sky' ? '→ POV' : '→ Sky'}
             </span>
           </button>
@@ -706,26 +758,42 @@ export function App() {
           {userRole === 'pauran' && (
             <button
               onClick={() => setIsCharacterSelectOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-stone-900/90 hover:bg-stone-800 text-emerald-200 border-2 border-emerald-600/70 rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all group"
-              title="Click to change your Pauran Character"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2.5 bg-stone-900/95 hover:bg-stone-800 text-emerald-200 border-2 border-emerald-600/70 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all group touch-manipulation"
+              title="Tap to change your Pauran Character"
             >
-              <span className="text-base group-hover:scale-110 transition-transform">
+              <span className="text-sm sm:text-base group-hover:scale-110 transition-transform">
                 {selectedPauranChar.avatarIcon}
               </span>
-              <span className="font-mono text-xs hidden md:inline">
+              <span className="font-mono text-xs hidden md:inline truncate max-w-[100px]">
                 {selectedPauranChar.name}
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-emerald-950 text-emerald-400 rounded-md border border-emerald-600/50 uppercase font-mono">
+              <span className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 bg-emerald-950 text-emerald-400 rounded-md border border-emerald-600/50 uppercase font-mono">
                 Switch
               </span>
             </button>
           )}
+
+          {/* Full Screen Toggle Button for Mobile Preview & Desktop */}
+          <button
+            onClick={handleToggleFullscreen}
+            className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-md font-bold text-xs tracking-wide active:scale-95 transition-all border-2 touch-manipulation ${
+              isFullscreen
+                ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                : 'bg-stone-900/95 hover:bg-stone-800 text-stone-300 border-stone-700/80 hover:text-amber-200'
+            }`}
+            title={isFullscreen ? 'Exit Full Screen Mode' : 'Enter Full Screen Mode'}
+          >
+            <span className="text-sm">{isFullscreen ? '✕' : '⛶'}</span>
+            <span className="font-mono text-[10px] sm:text-xs">
+              {isFullscreen ? 'Exit' : 'Full'}
+            </span>
+          </button>
         </div>
       )}
 
       {/* 3. ACTIVE BUILDING TOOL PROMPT (Floating indicator when President is building) */}
       {activeBuildTool && userRole === 'president' && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-30 bg-amber-500 text-stone-950 font-bold px-4 py-2 rounded-xl shadow-2xl text-xs flex items-center gap-3 animate-bounce">
+        <div className="absolute top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-30 bg-amber-500 text-stone-950 font-bold px-4 py-2 rounded-xl shadow-2xl text-xs flex items-center gap-3 animate-bounce">
           <span>
             {activeBuildTool === 'demolish'
               ? '⛏️ Demolish Mode: Tap any building to clear'
@@ -733,9 +801,106 @@ export function App() {
           </span>
           <button
             onClick={() => setActiveBuildTool(null)}
-            className="px-2 py-0.5 bg-stone-900 text-white rounded text-[10px] uppercase font-mono"
+            className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-amber-300 rounded-lg text-xs font-mono font-bold flex items-center gap-1 active:scale-95 touch-manipulation cursor-pointer border border-stone-700"
+            title="Cancel building and return to view"
           >
-            Cancel ✕
+            <span>←</span>
+            <span>Back</span>
+          </button>
+        </div>
+      )}
+
+      {/* 3B. FLOATING SELECTED TILE INSPECTOR WITH BACK / DESELECT */}
+      {selectedTile && selectedTileData && (
+        <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 z-30 bg-stone-900/95 border-2 border-amber-500/70 text-stone-100 p-3 sm:p-3.5 rounded-2xl shadow-2xl backdrop-blur-md max-w-[calc(100vw-24px)] sm:max-w-md w-full animate-fade-in pointer-events-auto">
+          <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{BUILDINGS_CATALOG[selectedTileData.type]?.icon || '📍'}</span>
+              <div>
+                <h4 className="font-bold text-amber-200 text-xs sm:text-sm font-serif-title leading-tight">
+                  {BUILDINGS_CATALOG[selectedTileData.type]?.name || selectedTileData.type}
+                </h4>
+                <div className="text-[10px] text-stone-400 font-mono">
+                  Coordinates: ({selectedTile.x}, {selectedTile.y}) · Level {selectedTileData.level}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedTile(null)}
+              className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl text-xs font-mono font-bold flex items-center gap-1 border border-stone-700 active:scale-95 touch-manipulation cursor-pointer shadow-sm"
+              title="Deselect tile and return to normal view"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="text-[11px] text-stone-300 line-clamp-2">
+              {BUILDINGS_CATALOG[selectedTileData.type]?.description || 'Kodavalam village landmark.'}
+            </div>
+            {userRole === 'president' && selectedTileData.type !== 'grass' && selectedTileData.type !== 'water' && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => handleUpgradeTile(selectedTile.x, selectedTile.y)}
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-lg active:scale-95 touch-manipulation cursor-pointer"
+                >
+                  Upgrade
+                </button>
+                <button
+                  onClick={() => handleDemolishTile(selectedTile.x, selectedTile.y)}
+                  className="px-2 py-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs rounded-lg active:scale-95 touch-manipulation cursor-pointer"
+                >
+                  Demolish
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4D. Floating Mobile Quick Zoom & Camera Dock */}
+      {userRole && (
+        <div className="absolute right-2.5 top-16 sm:top-20 z-30 pointer-events-auto flex flex-col gap-1.5 animate-fade-in">
+          {/* Zoom In */}
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('village-cam-action', { detail: { type: 'zoomIn', amount: 0.5 } })
+              );
+            }}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-stone-900/95 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-xl shadow-xl backdrop-blur-md font-mono font-bold text-lg flex items-center justify-center active:scale-90 active:bg-amber-600 active:text-stone-950 transition-all touch-manipulation cursor-pointer"
+            title="Zoom In (+)"
+          >
+            +
+          </button>
+
+          {/* Zoom Out */}
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('village-cam-action', { detail: { type: 'zoomOut', amount: 0.5 } })
+              );
+            }}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-stone-900/95 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-xl shadow-xl backdrop-blur-md font-mono font-bold text-lg flex items-center justify-center active:scale-90 active:bg-amber-600 active:text-stone-950 transition-all touch-manipulation cursor-pointer"
+            title="Zoom Out (-)"
+          >
+            −
+          </button>
+
+          {/* Reset Camera / Center */}
+          <button
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('village-cam-action', { detail: { type: 'reset' } })
+              );
+              setCameraTarget([0, 0, 0]);
+              showToast('Camera centered on Kodavalam village center');
+            }}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-stone-900/95 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-xl shadow-xl backdrop-blur-md font-bold text-sm flex items-center justify-center active:scale-90 active:bg-amber-600 active:text-stone-950 transition-all touch-manipulation cursor-pointer"
+            title="Center Camera / Reset View (🎯)"
+          >
+            🎯
           </button>
         </div>
       )}
@@ -835,6 +1000,7 @@ export function App() {
         <EventModal
           event={activeEvent}
           onMakeChoice={handleEventChoice}
+          onBack={() => setActiveEvent(null)}
         />
       )}
 
@@ -844,6 +1010,7 @@ export function App() {
           won={gameOutcome.won}
           reason={gameOutcome.reason}
           onRestart={handleRestart}
+          onBack={() => setGameOutcome(null)}
         />
       )}
     </div>

@@ -3172,17 +3172,37 @@ const CameraController: React.FC<{
       } else if (type === 'setAutoRotate') {
         isAutoRotatingRef.current = Boolean(value);
       } else if (type === 'zoomIn') {
-        targetZoomRef.current = THREE.MathUtils.clamp(
-          targetZoomRef.current + (amount ?? 0.5),
-          1.0,
-          6.5
-        );
+        if (isKingVishnuPOV) {
+          targetZoomRef.current = THREE.MathUtils.clamp(
+            targetZoomRef.current + (amount ?? 0.5),
+            1.0,
+            6.5
+          );
+        } else if (controlsRef.current) {
+          const target = controlsRef.current.target || new THREE.Vector3(0, 0, 0);
+          const dir = new THREE.Vector3().subVectors(camera.position, target);
+          if (dir.length() > 6) {
+            dir.multiplyScalar(0.8);
+            camera.position.copy(target).add(dir);
+            controlsRef.current.update();
+          }
+        }
       } else if (type === 'zoomOut') {
-        targetZoomRef.current = THREE.MathUtils.clamp(
-          targetZoomRef.current - (amount ?? 0.5),
-          1.0,
-          6.5
-        );
+        if (isKingVishnuPOV) {
+          targetZoomRef.current = THREE.MathUtils.clamp(
+            targetZoomRef.current - (amount ?? 0.5),
+            1.0,
+            6.5
+          );
+        } else if (controlsRef.current) {
+          const target = controlsRef.current.target || new THREE.Vector3(0, 0, 0);
+          const dir = new THREE.Vector3().subVectors(camera.position, target);
+          if (dir.length() < 300) {
+            dir.multiplyScalar(1.25);
+            camera.position.copy(target).add(dir);
+            controlsRef.current.update();
+          }
+        }
       } else if (type === 'setZoom') {
         targetZoomRef.current = THREE.MathUtils.clamp(value ?? 1.0, 1.0, 6.5);
       } else if (type === 'heightUp') {
@@ -3204,11 +3224,17 @@ const CameraController: React.FC<{
         if (typeof yaw === 'number') targetYawRef.current = yaw;
         if (typeof pitch === 'number') targetPitchRef.current = pitch;
       } else if (type === 'reset') {
-        isAutoRotatingRef.current = false;
-        targetYawRef.current = 0;
-        targetPitchRef.current = -0.22;
-        targetZoomRef.current = 1.0;
-        targetHeightRef.current = 48.0;
+        if (isKingVishnuPOV) {
+          isAutoRotatingRef.current = false;
+          targetYawRef.current = 0;
+          targetPitchRef.current = -0.22;
+          targetZoomRef.current = 1.0;
+          targetHeightRef.current = 48.0;
+        } else if (controlsRef.current) {
+          camera.position.set(0, 52, 54);
+          controlsRef.current.target.set(0, 0, 0);
+          controlsRef.current.update();
+        }
       }
       broadcastHUD();
     };
@@ -3222,6 +3248,7 @@ const CameraController: React.FC<{
     dom.addEventListener('touchend', onTouchEnd, { passive: true });
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('vishnu-cam-action', onCustomCamAction as EventListener);
+    window.addEventListener('village-cam-action', onCustomCamAction as EventListener);
 
     broadcastHUD();
 
@@ -3235,6 +3262,7 @@ const CameraController: React.FC<{
       dom.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('vishnu-cam-action', onCustomCamAction as EventListener);
+      window.removeEventListener('village-cam-action', onCustomCamAction as EventListener);
     };
   }, [isKingVishnuPOV, gl, camera, broadcastHUD]);
 

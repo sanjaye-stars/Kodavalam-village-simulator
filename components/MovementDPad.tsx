@@ -189,7 +189,7 @@ export const MovementDPad: React.FC<MovementDPadProps> = ({ onMove, isMoving, ch
         )}
 
         {/* Bottom-Left Royal Observatory Control Deck */}
-        <div className="absolute bottom-4 left-4 z-30 pointer-events-auto select-none flex flex-col items-start max-w-sm sm:max-w-md animate-fade-in">
+        <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-30 pointer-events-auto select-none flex flex-col items-start max-w-[calc(100vw-16px)] sm:max-w-sm animate-fade-in">
           {/* Collapsible Header Pill */}
           <div className="bg-stone-950/95 border-2 border-amber-500/80 backdrop-blur-md rounded-2xl p-3 shadow-2xl text-stone-100 flex flex-col gap-2.5 w-full">
             <div className="flex items-center justify-between gap-2 border-b border-amber-500/30 pb-2">
@@ -564,7 +564,7 @@ export const MovementDPad: React.FC<MovementDPadProps> = ({ onMove, isMoving, ch
 
   // STANDARD PAURAN WALKING D-PAD (for all other characters)
   return (
-    <div className="absolute bottom-4 left-4 z-30 pointer-events-auto select-none flex flex-col items-center">
+    <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-30 pointer-events-auto select-none flex flex-col items-center touch-manipulation">
       {/* Visual Hint */}
       <div className="mb-1 text-[10px] font-mono text-emerald-300 font-bold bg-stone-900/80 px-2 py-0.5 rounded-full border border-stone-800 shadow">
         Walk: W, A, S, D / Touch D-Pad

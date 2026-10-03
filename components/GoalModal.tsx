@@ -34,13 +34,23 @@ export const GoalModal: React.FC<GoalModalProps> = ({
       <div className="relative w-full max-w-md bg-stone-900 border border-stone-700 rounded-3xl shadow-2xl p-6 text-stone-100 flex flex-col space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-          <div>
-            <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400">
-              Panchayat 5-Year Master Plan
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={onClose}
+              className="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl text-xs font-mono font-bold flex items-center gap-1 border border-stone-700 active:scale-95 transition-all touch-manipulation cursor-pointer"
+              title="Return to village"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400">
+                Panchayat 5-Year Master Plan
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold font-serif-title text-amber-200">
+                Kodavalam Development Goals
+              </h2>
             </div>
-            <h2 className="text-xl font-bold font-serif-title text-amber-200">
-              Kodavalam Development Goals
-            </h2>
           </div>
           <button onClick={onClose} className="text-stone-400 hover:text-white px-2 py-1 text-sm font-medium">
             ✕
